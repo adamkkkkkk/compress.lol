@@ -18,6 +18,7 @@
 	import ThemeSelector from '$lib/components/ui/selector/theme-selector.svelte';
 	import Settings from '@lucide/svelte/icons/settings';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Info from '@lucide/svelte/icons/info';
 
 	interface CompressionTarget {
 		label: string;
@@ -76,6 +77,7 @@
 	} | null>(null);
 	let isChromium = $state(false);
 	let showAdvancedSettings = $state(false);
+	let showTechnicalDetails = $state(false);
 	let muteSound = $state(false);
 	let audioOnlyMode = $state(false);
 	let preserveOriginalFps = $state(false);
@@ -977,7 +979,7 @@
 						</div>
 
 						<div class="flex items-center justify-between">
-							<span class="text-sm font-medium">Target:</span>
+							<span class="text-sm font-medium">Target Size:</span>
 							<Badge variant="outline">{formatFileSize(usedTarget)}</Badge>
 						</div>
 
@@ -1004,46 +1006,66 @@
 						</Button>
 
 						{#if resultDetails}
-							<div class="space-y-3 border-t pt-4">
-								<h4 class="font-medium">Details</h4>
+							<div class="rounded-lg border">
+								<button
+									onclick={() => (showTechnicalDetails = !showTechnicalDetails)}
+									class="flex w-full items-center justify-between rounded-t-lg p-3 text-left transition-colors hover:bg-accent/50"
+								>
+									<div class="flex items-center gap-2">
+										<Info class="h-4 w-4" />
+										<span class="text-sm font-semibold">Technical Details</span>
+									</div>
+									<ChevronDown
+										class="h-4 w-4 transition-transform duration-200 {showTechnicalDetails
+											? 'rotate-180'
+											: ''}"
+									/>
+								</button>
 
-								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium">Resolution:</span>
-									<Badge variant="outline">
-										{resultDetails.originalResolution} → {resultDetails.resolution}
-									</Badge>
-								</div>
+								<div
+									class="overflow-hidden transition-all duration-300 ease-in-out"
+									style="max-height: {showTechnicalDetails ? '500px' : '0px'};"
+								>
+									<div class="space-y-3 border-t p-3">
+										<div class="flex items-center justify-between">
+											<span class="text-sm font-medium">Resolution:</span>
+											<Badge variant="outline">
+												{resultDetails.originalResolution} → {resultDetails.resolution}
+											</Badge>
+										</div>
 
-								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium">FPS:</span>
-									<Badge variant="outline">{resultDetails.originalFps} → {resultDetails.fps}</Badge>
-								</div>
+										<div class="flex items-center justify-between">
+											<span class="text-sm font-medium">FPS:</span>
+											<Badge variant="outline">{resultDetails.originalFps} → {resultDetails.fps}</Badge>
+										</div>
 
-								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium">Bitrate:</span>
-									<Badge variant="outline">
-										{formatBitrate(resultDetails.originalBitrate)} → {formatBitrate(resultDetails.bitrate)}
-									</Badge>
-								</div>
+										<div class="flex items-center justify-between">
+											<span class="text-sm font-medium">Bitrate:</span>
+											<Badge variant="outline">
+												{formatBitrate(resultDetails.originalBitrate)} → {formatBitrate(resultDetails.bitrate)}
+											</Badge>
+										</div>
 
-								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium">Audio:</span>
-									<Badge variant="outline">{resultDetails.audio}</Badge>
-								</div>
+										<div class="flex items-center justify-between">
+											<span class="text-sm font-medium">Audio:</span>
+											<Badge variant="outline">{resultDetails.audio}</Badge>
+										</div>
 
-								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium">Time taken:</span>
-									<Badge variant="outline">{formatTimeRemaining(Math.round(resultDetails.timeTaken))}</Badge>
-								</div>
+										<div class="flex items-center justify-between">
+											<span class="text-sm font-medium">Time taken:</span>
+											<Badge variant="outline">{formatTimeRemaining(Math.round(resultDetails.timeTaken))}</Badge>
+										</div>
 
-								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium">Encoding speed:</span>
-									<Badge variant="outline">{resultDetails.speed.toFixed(2)}×</Badge>
-								</div>
+										<div class="flex items-center justify-between">
+											<span class="text-sm font-medium">Encoding speed:</span>
+											<Badge variant="outline">{resultDetails.speed.toFixed(2)}×</Badge>
+										</div>
 
-								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium">Encoder:</span>
-									<Badge variant="outline">{resultDetails.encoder}</Badge>
+										<div class="flex items-center justify-between">
+											<span class="text-sm font-medium">Encoder:</span>
+											<Badge variant="outline">{resultDetails.encoder}</Badge>
+										</div>
+									</div>
 								</div>
 							</div>
 						{/if}
