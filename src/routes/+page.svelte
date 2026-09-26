@@ -775,7 +775,7 @@
 								max="2000"
 								bind:value={customSizeMB}
 								oninput={handleCustomSizeChange}
-								class="mt-2"
+								class="mt-2 bg-transparent"
 							/>
 						</div>
 					{/if}
