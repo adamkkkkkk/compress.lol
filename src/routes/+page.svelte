@@ -138,12 +138,12 @@
 				}
 			});
 
+			const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.15/dist/umd';
 			await ffmpeg.load({
-				coreURL: await toBlobURL(`ffmpeg/ffmpeg-core.js`, 'text/javascript'),
-				wasmURL: await toBlobURL(`ffmpeg/ffmpeg-core.wasm`, 'application/wasm'),
-				workerURL: await toBlobURL(`ffmpeg/ffmpeg-core.worker.js`, 'text/javascript')
+			    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+			    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+			    workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
 			});
-
 			console.log('FFmpeg load completed!');
 			isLoaded = true;
 			message = 'Ready to compress videos!';
