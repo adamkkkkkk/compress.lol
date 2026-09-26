@@ -61,6 +61,19 @@
 	let message = $state('Initializing...');
 	let startTime = $state<number>(0);
 	let estimatedTimeRemaining = $state<number>(0);
+	let usedTarget = $state(0);
+	let resultDetails = $state<{
+		originalResolution: string;
+		resolution: string;
+		originalFps: number;
+		fps: number;
+		originalBitrate: number;
+		bitrate: number;
+		audio: string;
+		timeTaken: number;
+		speed: number;
+		encoder: string;
+	} | null>(null);
 	let isChromium = $state(false);
 	let showAdvancedSettings = $state(false);
 	let muteSound = $state(false);
@@ -387,6 +400,8 @@
 		errorMessage = '';
 		startTime = Date.now();
 		estimatedTimeRemaining = 0;
+		usedTarget = selectedTarget.value;
+		resultDetails = null;
 
 		try {
 			const inputDir = '/input';
@@ -531,6 +546,25 @@
 			processedVideo = data;
 			compressedSize = data.length;
 
+			let outDuration = videoMetadata.duration;
+			if (trimVideo) {
+				outDuration -= Math.max(0, skipFirstSeconds) + Math.max(0, skipLastSeconds);
+			}
+			if (outDuration <= 0) outDuration = videoMetadata.duration;
+			const timeTaken = (Date.now() - startTime) / 1000;
+			resultDetails = {
+				originalResolution: videoMetadata.resolution,
+				resolution: settings.resolution,
+				originalFps: videoMetadata.fps,
+				fps: Math.min(settings.targetFps, videoMetadata.fps),
+				originalBitrate: (originalSize * 8) / videoMetadata.duration / 1000,
+				bitrate: (compressedSize * 8) / outDuration / 1000,
+				audio: muteSound ? 'Removed' : `${parseInt(settings.audioBitrate)} kbps`,
+				timeTaken,
+				speed: timeTaken > 0 ? outDuration / timeTaken : 0,
+				encoder: `x264 · ${settings.preset} · CRF ${settings.crf}`
+			};
+
 			await ffmpeg.unmount(inputDir);
 			await ffmpeg.deleteDir(inputDir);
 			await ffmpeg.deleteFile('output.mp4');
@@ -584,6 +618,9 @@
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
 		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 	};
+
+	const formatBitrate = (kbps: number): string =>
+		kbps >= 1000 ? `${(kbps / 1000).toFixed(1)} Mbps` : `${Math.round(kbps)} kbps`;
 
 	const formatDuration = (seconds: number): string => {
 		const mins = Math.floor(seconds / 60);
@@ -929,7 +966,7 @@
 
 						<div class="flex items-center justify-between">
 							<span class="text-sm font-medium">{m.compressed_size()}:</span>
-							<Badge variant={compressedSize <= selectedTarget.value ? 'default' : 'destructive'}>
+							<Badge variant={compressedSize <= usedTarget ? 'default' : 'destructive'}>
 								{formatFileSize(compressedSize)}
 							</Badge>
 						</div>
@@ -940,13 +977,18 @@
 						</div>
 
 						<div class="flex items-center justify-between">
+							<span class="text-sm font-medium">Target:</span>
+							<Badge variant="outline">{formatFileSize(usedTarget)}</Badge>
+						</div>
+
+						<div class="flex items-center justify-between">
 							<span class="text-sm font-medium">{m.target_met()}:</span>
-							<Badge variant={compressedSize <= selectedTarget.value ? 'default' : 'destructive'}>
-								{compressedSize <= selectedTarget.value ? m.yes() : m.no()}
+							<Badge variant={compressedSize <= usedTarget ? 'default' : 'destructive'}>
+								{compressedSize <= usedTarget ? m.yes() : m.no()}
 							</Badge>
 						</div>
 
-						{#if compressedSize > selectedTarget.value}
+						{#if compressedSize > usedTarget}
 							<Alert.Root>
 								<Alert.Description>
 									{m.target_size_warning()}
@@ -954,9 +996,57 @@
 							</Alert.Root>
 						{/if}
 
-						<Button onclick={downloadVideo} class="w-full">
+						<Button
+							onclick={downloadVideo}
+							class="w-full bg-[#FF622E] text-white hover:bg-[#FF622E]/90"
+						>
 							{m.download_compressed()}
 						</Button>
+
+						{#if resultDetails}
+							<div class="space-y-3 border-t pt-4">
+								<h4 class="font-medium">Details</h4>
+
+								<div class="flex items-center justify-between">
+									<span class="text-sm font-medium">Resolution:</span>
+									<Badge variant="outline">
+										{resultDetails.originalResolution} → {resultDetails.resolution}
+									</Badge>
+								</div>
+
+								<div class="flex items-center justify-between">
+									<span class="text-sm font-medium">FPS:</span>
+									<Badge variant="outline">{resultDetails.originalFps} → {resultDetails.fps}</Badge>
+								</div>
+
+								<div class="flex items-center justify-between">
+									<span class="text-sm font-medium">Bitrate:</span>
+									<Badge variant="outline">
+										{formatBitrate(resultDetails.originalBitrate)} → {formatBitrate(resultDetails.bitrate)}
+									</Badge>
+								</div>
+
+								<div class="flex items-center justify-between">
+									<span class="text-sm font-medium">Audio:</span>
+									<Badge variant="outline">{resultDetails.audio}</Badge>
+								</div>
+
+								<div class="flex items-center justify-between">
+									<span class="text-sm font-medium">Time taken:</span>
+									<Badge variant="outline">{formatTimeRemaining(Math.round(resultDetails.timeTaken))}</Badge>
+								</div>
+
+								<div class="flex items-center justify-between">
+									<span class="text-sm font-medium">Encoding speed:</span>
+									<Badge variant="outline">{resultDetails.speed.toFixed(2)}×</Badge>
+								</div>
+
+								<div class="flex items-center justify-between">
+									<span class="text-sm font-medium">Encoder:</span>
+									<Badge variant="outline">{resultDetails.encoder}</Badge>
+								</div>
+							</div>
+						{/if}
 					</div>
 				{:else}
 					<div class="py-8 text-center text-muted-foreground">
