@@ -96,11 +96,13 @@
 		{ label: '8 MB', value: 8 * 1024 * 1024, description: 'Ultra compression' },
 		{ label: '25 MB', value: 25 * 1024 * 1024, description: 'High compression' },
 		{ label: '50 MB', value: 50 * 1024 * 1024, description: 'Medium compression' },
-		{ label: '100 MB', value: 100 * 1024 * 1024, description: 'Low compression' }
+		{ label: '100 MB', value: 100 * 1024 * 1024, description: 'Low compression' },
+		{ label: 'Custom', value: 0, description: 'Custom size' }
 	];
 
 	let selectedTargetValue = $state('25 MB');
 	let selectedTarget = $state(compressionTargets[1]);
+	let customSizeMB = $state(50);
 
 	onMount(async (): Promise<void> => {
 		try {
@@ -605,16 +607,25 @@
 	const handleTargetChange = (value: string | undefined): void => {
 		if (!value) return;
 		selectedTargetValue = value;
-		const target = compressionTargets.find((t) => t.label === value);
-		if (target) {
-			selectedTarget = target;
-			try {
-				localStorage.setItem('targetSize', value);
-			} catch (e) {
+		if (value === 'Custom') {
+			selectedTarget = { label: 'Custom', value: customSizeMB * 1024 * 1024, description: 'Custom size' };
+		} else {
+			const target = compressionTargets.find((t) => t.label === value);
+			if (target) {
+				selectedTarget = target;
 			}
 		}
+		try {
+			localStorage.setItem('targetSize', value);
+		} catch (e) {
+		}
 	};
-</script>
+
+	const handleCustomSizeChange = (): void => {
+		if (selectedTargetValue === 'Custom') {
+			selectedTarget = { label: 'Custom', value: customSizeMB * 1024 * 1024, description: 'Custom size' };
+		}
+	};
 
 <svelte:head>
 	<title>{m.app_title()} - {m.app_subtitle()}</title>
@@ -707,6 +718,20 @@
 							{/each}
 						</Select.Content>
 					</Select.Root>
+					{#if selectedTargetValue === 'Custom'}
+						<div class="mt-2">
+							<Label for="custom-size">Custom size (MB)</Label>
+							<Input
+								id="custom-size"
+								type="number"
+								min="1"
+								max="2000"
+								bind:value={customSizeMB}
+								oninput={handleCustomSizeChange}
+								class="mt-1"
+							/>
+						</div>
+					{/if}
 				</div>
 
 				<!-- Advanced Settings Section -->
