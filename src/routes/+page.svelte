@@ -106,6 +106,8 @@
 
 	onMount(async (): Promise<void> => {
 		try {
+			const savedCustom = Number(localStorage.getItem('customSizeMB'));
+			if (savedCustom > 0) customSizeMB = savedCustom;
 			const savedTarget = localStorage.getItem('targetSize');
 			if (savedTarget) {
 				handleTargetChange(savedTarget);
@@ -608,7 +610,7 @@
 		if (!value) return;
 		selectedTargetValue = value;
 		if (value === 'Custom') {
-			selectedTarget = { label: 'Custom', value: customSizeMB * 1024 * 1024, description: 'Custom size' };
+			handleCustomSizeChange();
 		} else {
 			const target = compressionTargets.find((t) => t.label === value);
 			if (target) {
@@ -623,7 +625,12 @@
 
 	const handleCustomSizeChange = (): void => {
 		if (selectedTargetValue === 'Custom') {
-			selectedTarget = { label: 'Custom', value: customSizeMB * 1024 * 1024, description: 'Custom size' };
+			const mb = Math.min(2000, Math.max(1, Number(customSizeMB) || 1));
+			selectedTarget = { label: `${mb} MB`, value: mb * 1024 * 1024, description: 'Custom size' };
+			try {
+				localStorage.setItem('customSizeMB', String(mb));
+			} catch (e) {
+			}
 		}
 	};
 </script>
