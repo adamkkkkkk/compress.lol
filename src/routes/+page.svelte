@@ -720,7 +720,7 @@
 						</Select.Content>
 					</Select.Root>
 					{#if selectedTargetValue === 'Custom'}
-						<div class="mt-2">
+						<div class="mt-4">
 							<Label for="custom-size">Custom size (MB)</Label>
 							<Input
 								id="custom-size"
@@ -729,7 +729,7 @@
 								max="2000"
 								bind:value={customSizeMB}
 								oninput={handleCustomSizeChange}
-								class="mt-1"
+								class="mt-2"
 							/>
 						</div>
 					{/if}
