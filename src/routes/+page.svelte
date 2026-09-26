@@ -626,6 +626,7 @@
 			selectedTarget = { label: 'Custom', value: customSizeMB * 1024 * 1024, description: 'Custom size' };
 		}
 	};
+</script>
 
 <svelte:head>
 	<title>{m.app_title()} - {m.app_subtitle()}</title>
